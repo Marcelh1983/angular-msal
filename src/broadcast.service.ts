@@ -1,24 +1,24 @@
-import { Injectable } from "@angular/core";
-import { BehaviorSubject, Observable, Subscription } from "rxjs";
-import { filter, map } from "rxjs/operators";
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 export type MessageCallback = (payload: any) => void;
 
 @Injectable()
 export class BroadcastService {
-    private _msalSubject: BehaviorSubject<any>;
+    private msalSubject: BehaviorSubject<any>;
     private msalItem$: Observable<any>;
 
     constructor() {
-        this._msalSubject = new BehaviorSubject<any>(1);
-        this.msalItem$ = this._msalSubject.asObservable();
+        this.msalSubject = new BehaviorSubject<any>(1);
+        this.msalItem$ = this.msalSubject.asObservable();
     }
 
     broadcast(type: string, payload: any) {
-        this._msalSubject.next({ type, payload });
+        this.msalSubject.next({ type, payload });
     }
 
     getMSALSubject() {
-        return this._msalSubject;
+        return this.msalSubject;
     }
 
     getMSALItem() {

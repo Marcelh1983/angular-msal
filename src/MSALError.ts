@@ -1,4 +1,7 @@
 export class MSALError {
+    public error = '';
+    public errorDesc = '';
+    public scopes = '';
     constructor(error: string, errorDesc?: string, scopes?: string) {
         this.error = error;
         if (errorDesc) {
@@ -7,29 +10,5 @@ export class MSALError {
         if (scopes) {
             this.scopes = scopes;
         }
-    }
-
-    get error(): string {
-        return this.error;
-    }
-
-    set error(value: string) {
-        this.error = value;
-    }
-
-    get errorDesc(): string {
-        return this.errorDesc;
-    }
-
-    set errorDesc(value: string) {
-        this.errorDesc = value;
-    }
-
-    get scopes(): string {
-        return this.scopes;
-    }
-
-    set scopes(value: string) {
-        this.scopes = value;
     }
 }
