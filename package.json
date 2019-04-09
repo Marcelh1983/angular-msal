@@ -1,0 +1,63 @@
+{
+  "name": "msal-angular-clone",
+  "author": {
+    "name": "Marcel"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Marcelh1983/msal-angular-clone.git"
+  },
+  "version": "0.1.1",
+  "keywords": [
+    "implicit",
+    "angular",
+    "AAD",
+    "msal",
+    "oauth"
+  ],
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "dependencies": {
+    "msal": "0.2.4",
+    "tslib": "1.7.1"
+  },
+  "devDependencies": {
+    "@angular/common": "^7.0.0",
+    "@angular/compiler": "^7.0.0",
+    "@angular/compiler-cli": "^7.0.0",
+    "@angular/core": "^7.0.0",
+    "@angular/platform-browser": "^7.0.0",
+    "@angular/platform-browser-dynamic": "^7.0.0",
+    "@angular/router": "^7.0.0",
+    "codelyzer": "~5.0.0",
+    "core-js": "^2.4.1",
+    "del": "^4.0.0",
+    "gulp": "^3.9.0",
+    "gulp-bump": "^3.1.0",
+    "gulp-typescript": "^5.0.1",
+    "merge2": "^1.2.3",
+    "msal": "^0.2.4",
+    "rxjs": "^6.3.0",
+    "tslint": "^5.15.0",
+    "typedoc": "^0.14.2",
+    "typescript": "3.1.6",
+    "zone.js": "^0.8.26"
+  },
+  "peerDependencies": {
+    "@angular/common": "^7.0.0",
+    "@angular/core": "^7.0.0",
+    "rxjs": "^6.3.0"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "gulp clean && gulp compile && gulp copy",
+    "publish": "npm run build && gulp copy && gulp publish"
+  },
+  "description": "Copied: Microsoft Authentication Library for Angular (Preview)\r ========================================================="
+}
