@@ -261,12 +261,17 @@ export class MsalService extends UserAgentApplication {
     }
 
     public loginRedirect(consentScopes?: string[], extraQueryParameters?: string) {
-
+        if (!consentScopes) {
+            consentScopes = this.config.consentScopes;
+        }
         this._logger.verbose('login redirect flow');
         super.loginRedirect(consentScopes, extraQueryParameters);
     }
 
     public loginPopup(consentScopes?: string[], extraQueryParameters?: string): Promise<any> {
+        if (!consentScopes) {
+            consentScopes = this.config.consentScopes;
+        }
         this._logger.verbose('login popup flow');
         return new Promise((resolve, reject) => {
             super.loginPopup(consentScopes, extraQueryParameters).then((idToken) => {
@@ -292,7 +297,10 @@ export class MsalService extends UserAgentApplication {
         return super.getCachedTokenInternal(scopes, this.getUser());
     }
 
-    public acquireTokenSilent(scopes: Array<string>, authority?: string, user?: User, extraQueryParameters?: string): Promise<any> {
+    public acquireTokenSilent(scopes?: Array<string>, authority?: string, user?: User, extraQueryParameters?: string): Promise<any> {
+        if (!scopes) {
+            scopes = this.config.consentScopes;
+        }
         return new Promise((resolve, reject) => {
             super.acquireTokenSilent(scopes, authority, user, extraQueryParameters).then((token: any) => {
                 this.renewActive = false;
