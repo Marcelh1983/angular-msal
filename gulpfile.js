@@ -19,9 +19,12 @@ gulp.task('compile', function (cb) {
 
 gulp.task('copy', function (cb) {
     const pkgjson = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+    const readMe = fs.readFileSync('./README.md', 'utf8');
     delete pkgjson.scripts;
     delete pkgjson.devDependencies;
+    const filepathReadme = './dist/README.md';
     const filepath = './dist/package.json';
+    fs.writeFileSync(filepathReadme, readMe, 'utf-8');
     fs.writeFileSync(filepath, JSON.stringify(pkgjson, null, 2), 'utf-8');
 });
 
