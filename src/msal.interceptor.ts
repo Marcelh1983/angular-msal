@@ -30,33 +30,15 @@ export class MsalInterceptor implements HttpInterceptor {
                     Authorization: `Bearer ${tokenStored.token}`,
                 }
             });
-            return next.handle(req).pipe(tap(event => { }, err => {
-                if (err instanceof HttpErrorResponse && err.status === 401) {
-                    if (tokenStored && tokenStored.token) {
-                        this.auth.clearCacheForScope(tokenStored.token);
-                    }
-                    const msalError = new MSALError(JSON.stringify(err), '', JSON.stringify(scopes));
-                    this.broadcastService.broadcast('msal:notAuthorized', msalError);
-                }
-            }));
-        } else {
-            return from(this.auth.acquireTokenSilent(scopes).then(token => {
-                const JWT = `Bearer ${token}`;
-                return req.clone({
-                    setHeaders: {
-                        Authorization: JWT,
-                    },
-                });
-            })).pipe(mergeMap(_ => next.handle(req).pipe(
-                tap(event => { }, err => {
-                    if (err instanceof HttpErrorResponse && err.status === 401) {
-                        if (tokenStored && tokenStored.token) {
-                            this.auth.clearCacheForScope(tokenStored.token);
-                        }
-                        const msalError = new MSALError(JSON.stringify(err), '', JSON.stringify(scopes));
-                        this.broadcastService.broadcast('msal:notAuthorized', msalError);
-                    }
-                })))); // calling next.handle means we are passing control to next interceptor in chain
         }
+        return next.handle(req).pipe(tap(event => { }, err => {
+            if (err instanceof HttpErrorResponse && err.status === 401) {
+                if (tokenStored && tokenStored.token) {
+                    this.auth.clearCacheForScope(tokenStored.token);
+                }
+                const msalError = new MSALError(JSON.stringify(err), '', JSON.stringify(scopes));
+                this.broadcastService.broadcast('msal:notAuthorized', msalError);
+            }
+        }));
     }
 }
