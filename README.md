@@ -15,6 +15,14 @@ This is how I use the package:
 I have a userService that has a function: TryToGetUser, which tries to get the current user from
 my backend (using the tokens ObjectId which I make sure is equal to my User.Id)
 
+Add the HttpIntercepter in app.module.ts
+
+```js 
+providers: [UserService,
+    { provide: HTTP_INTERCEPTORS, useClass: MsalInterceptor, multi: true }
+  ]
+```
+
 ```js
 @Injectable()
 export class UserService {
