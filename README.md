@@ -69,7 +69,9 @@ export class LoginPageComponent {
   constructor(private authService: MsalService, public userService: UserService, private router: Router) {
     // used for login redirect
     userService.tryToGetUser().pipe(tap(user => {
-      router.navigate([!user ? 'login' : 'myProfile']);
+      if (user) {
+        router.navigate(['MyProfile']);
+      }
     })).subscribe();
   }
 
