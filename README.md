@@ -1,5 +1,5 @@
 
-COPIED FROM: Microsoft Authentication Library for Angular Preview
+Angular MSAL
 =================================================================
 
 Copied from https://github.com/AzureAD/microsoft-authentication-library-for-js. All credits to Microsoft.
@@ -15,7 +15,23 @@ This is how I use the package:
 I have a userService that has a function: TryToGetUser, which tries to get the current user from
 my backend (using the tokens ObjectId which I make sure is equal to my User.Id)
 
-Add the HttpIntercepter in app.module.ts
+Add the MsalModule and HttpIntercepter in app.module.ts
+
+```js 
+MsalModule.forRoot({
+  clientID: environment.clientId,
+  authority: environment.authority,
+  validateAuthority: true,
+  cacheLocation: 'localStorage',
+  navigateToLoginRequestUrl: true,
+  popUp: false,
+  consentScopes: environment.scopes,
+  logger: loggerCallback,
+  correlationId: '1234',
+  level: LogLevel.Info,
+  piiLoggingEnabled: true
+})
+```    
 
 ```js 
 providers: [UserService,
