@@ -2,12 +2,9 @@
 Angular MSAL
 =================================================================
 
-Copied from https://github.com/AzureAD/microsoft-authentication-library-for-js. All credits to Microsoft.
+Copied from <a href="https://github.com/AzureAD/microsoft-authentication-library-for-js."> @azure/msal-angular</a> and made changes I needed to support Angular 6+ and Internet Explorer. 
 
-Changed:
-* Updated packages
-* Linted project
-* Removed tests, samples and everything else that's not needed to build a npm package.
+<a href="https://github.com/Marcelh1983/msal-angular-clone/blob/master/changelog.md">Changes</a>
 
 ## Usage
 
