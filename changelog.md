@@ -1,4 +1,6 @@
 # 0.1.0 (4/9/2019)
+* Upgraded packages to support Angular 6+
+* Upgraded msal package
 * Removed unused code, samples, tests etc.
 * Linted code 
 
