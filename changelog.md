@@ -13,5 +13,8 @@
 # 0.1.3 (4/12/2019)
 * if token is in cache, don't try to acquireSilent
 
-# 0.1.4 (5/2/2019)
+# 0.1.4 (4/3/2019)
 * compile to es5 to support Internet Explorer
+
+# 0.1.5 (5/3/2019)
+* updated readme
