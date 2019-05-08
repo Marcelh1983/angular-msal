@@ -2,375 +2,195 @@ import { Inject, Injectable, InjectionToken } from '@angular/core';
 import { MsalConfig } from './msal-config';
 import {
     UserAgentApplication,
-    CacheResult,
-    User, Constants, Logger
+    Constants, Logger, AuthError
 } from 'msal';
-import {
-    Router
-} from '@angular/router';
-import { BroadcastService } from './broadcast.service';
-import { AuthenticationResult } from './AuthenticationResult';
-import { MSALError } from './MSALError';
+import { AuthenticationParameters } from 'msal/lib-commonjs/AuthenticationParameters';
+import { AuthResponse } from 'msal/lib-commonjs/AuthResponse';
+import { Router } from '@angular/router';
+import { ResolvedStaticSymbol } from '@angular/compiler';
 
 export const MSAL_CONFIG = new InjectionToken<string>('MSAL_CONFIG');
 
 @Injectable()
 export class MsalService extends UserAgentApplication {
-    public user: any;
-    public oauthData = { isAuthenticated: false, userName: '', loginError: '', idToken: {} };
     public renewActive: boolean;
     private loginScopes: string[];
 
-    constructor(@Inject(MSAL_CONFIG) private config: MsalConfig, private router: Router, private broadcastService: BroadcastService) {
-        super(config.clientID, config.authority, null,
-            {
-                validateAuthority: config.validateAuthority,
-                cacheLocation: config.cacheLocation,
-                redirectUri: config.redirectUri,
-                postLogoutRedirectUri: config.postLogoutRedirectUri,
-                logger: new Logger(config.logger,
+    constructor(@Inject(MSAL_CONFIG) private injectedConfig: MsalConfig, private router: Router) {
+        super({
+            auth: {
+                authority: injectedConfig.authority,
+                validateAuthority: injectedConfig.validateAuthority,
+                navigateToLoginRequestUrl: injectedConfig.navigateToLoginRequestUrl,
+                postLogoutRedirectUri: injectedConfig.postLogoutRedirectUri,
+                clientId: injectedConfig.clientID,
+                redirectUri: injectedConfig.redirectUri,
+            },
+            cache: {
+                cacheLocation: injectedConfig.cacheLocation,
+                storeAuthStateInCookie: injectedConfig.storeAuthStateInCookie
+            },
+            system: {
+                loadFrameTimeout: injectedConfig.loadFrameTimeout,
+                logger: new Logger(injectedConfig.logger,
                     {
-                        correlationId: config.correlationId,
-                        level: config.level,
-                        piiLoggingEnabled: config.piiLoggingEnabled
-                    }),
-                loadFrameTimeout: config.loadFrameTimeout,
-                navigateToLoginRequestUrl: config.navigateToLoginRequestUrl,
+                        correlationId: injectedConfig.correlationId,
+                        level: injectedConfig.level,
+                        piiLoggingEnabled: injectedConfig.piiLoggingEnabled
+                    })
+            },
+            framework: {
                 isAngular: true,
-                unprotectedResources: config.unprotectedResources,
-                protectedResourceMap: new Map(config.protectedResourceMap),
-            });
-
-        this.loginScopes = [this.clientId];
-        this.updateDataFromCache(this.loginScopes);
+                protectedResourceMap: new Map(injectedConfig.protectedResourceMap),
+                unprotectedResources: injectedConfig.unprotectedResources || []
+            }
+        });
+        this.loginScopes = [this.injectedConfig.clientID];
         const urlHash = window.location.hash;
         this.processHash(urlHash);
-
-        window.addEventListener('msal:popUpHashChanged', (e: CustomEvent) => {
-            this._logger.verbose('popUpHashChanged ');
-            this.processHash(e.detail);
-        });
-
-        window.addEventListener('msal:popUpClosed', (e: CustomEvent) => {
-            const errorParts = e.detail.split('|');
-            const msalError = new MSALError(errorParts[0], errorParts[1]);
-            if (this.loginInProgress()) {
-                broadcastService.broadcast('msal:loginFailure', msalError);
-                this.setloginInProgress(false);
-            } else if (this.getAcquireTokenInProgress()) {
-                broadcastService.broadcast('msal:acquireTokenFailure', msalError);
-                this.setAcquireTokenInProgress(false);
-            }
-        });
-
-        this.router.events.subscribe(event => {
-            router.config.forEach(routerConfigElement => {
-                if (!routerConfigElement.canActivate) {
-                    if (this.config && this.config.unprotectedResources) {
-                        if (!this.isUnprotectedResource(routerConfigElement.path) && routerConfigElement.path) {
-                            this.config.unprotectedResources.push(routerConfigElement.path);
-                        }
-                    }
-                }
-            });
-        });
     }
 
-    updateDataFromCache(scopes: string[]) {
-        // only cache lookup here to not interrupt with events
-        let cacheResult: CacheResult;
-        cacheResult = super.getCachedTokenInternal(scopes, this.getUser());
-        this.oauthData.isAuthenticated = cacheResult != null && cacheResult.token !== null && cacheResult.token.length > 0;
-        const user = this.getUser();
-        if (user) {
-            this.oauthData.userName = user.name;
-            this.oauthData.idToken = user.idToken;
-        }
-        if (cacheResult && cacheResult.error) {
-            this.oauthData.loginError = cacheResult == null ? '' : cacheResult.error;
-        }
-    }
-
-    private processHash(hash: string) {
+    private processHash(hash: string, popup = false) {
+        // assuming that using a popup, this is not needed.
+        let requestInfo = null;
+        let callback = null;
+        let msal: any;
         if (this.isCallback(hash)) {
-            let isPopup = false;
-            let requestInfo = null;
-            let callback = null;
-            let msal: any;
-            // callback can come from popupWindow, iframe or mainWindow
-            if (window.openedWindows.length > 0 && window.openedWindows[window.openedWindows.length - 1].opener
-                && window.openedWindows[window.openedWindows.length - 1].opener.msal) {
-                const mainWindow = window.openedWindows[window.openedWindows.length - 1].opener;
-                msal = mainWindow.msal;
-                isPopup = true;
-                requestInfo = msal.getRequestInfo(hash);
-                if (mainWindow.callBackMappedToRenewStates[requestInfo.stateResponse]) {
-                    callback = mainWindow.callBackMappedToRenewStates[requestInfo.stateResponse];
-                }
-            } else if (window.parent && window.parent.msal) {     // redirect flow
+            // redirect flow
+            if (window.parent && window.parent.msal) {
                 msal = window.parent.msal;
-                requestInfo = msal.getRequestInfo(hash);
-                if (window.parent !== window && window.parent.callBackMappedToRenewStates[requestInfo.stateResponse]) {
-                    callback = window.parent.callBackMappedToRenewStates[requestInfo.stateResponse];
-                } else {
-                    callback = msal._tokenReceivedCallback;
-                }
+                requestInfo = msal.deserializeHash(hash);
             }
-
-
-            this.getLogger().verbose('Processing the hash: ' + hash);
-            this.saveTokenFromHash(requestInfo);
-            // Return to callback if it is sent from iframe
-            const token = requestInfo.parameters.access_token || requestInfo.parameters.id_token;
-            const error = requestInfo.parameters.error;
-            const errorDescription = requestInfo.parameters.error_description;
-            let tokenType = null;
-            const msalError = new MSALError(error, errorDescription);
-            const authenticationResult = new AuthenticationResult(token);
-
-            if (requestInfo.stateMatch) {
-                if (requestInfo.requestType === 'RENEW_TOKEN') {
-                    tokenType = Constants.accessToken;
-                    authenticationResult.tokenType = tokenType;
-                    this.renewActive = false;
-                    // Call within the same context without full page redirect keeps the callback
-                    // id_token or access_token can be renewed
-                    if (window.parent === window && !window.parent.callBackMappedToRenewStates[requestInfo.stateResponse]) {
-                        if (token) {
-                            this.broadcastService.broadcast('msal:acquireTokenSuccess', authenticationResult);
-                        } else if (error && errorDescription) {
-                            this.broadcastService.broadcast('msal:acquireTokenFailure', msalError);
-                        }
-                    }
-
-                } else if (requestInfo.requestType === 'LOGIN') {
-                    tokenType = Constants.idToken;
-                    authenticationResult.tokenType = tokenType;
-                    this.updateDataFromCache(this.loginScopes);
-                    if (this.oauthData.userName) {
-                        setTimeout(() => {
-                            // id_token is added as token for the app
-                            this.updateDataFromCache(this.loginScopes);
-                            // todo temp commented
-                            //  this.userInfo = this._oauthData;
-                        }, 1);
-                        this.broadcastService.broadcast('msal:loginSuccess', authenticationResult);
-                    } else {
-                        this.broadcastService.broadcast('msal:loginFailure', msalError);
-                    }
-                }
-
-                if (callback && typeof callback === 'function') {
-                    callback(errorDescription, token, error, tokenType);
-                }
-
-                // since this is a token renewal request in iFrame, we don't need to proceed with the location change.
-                if (window.parent !== window) { // in iframe
-                    if (event && event.preventDefault) {
-                        event.preventDefault();
-                    }
-                    return;
-                }
-
-                // redirect to login start page
-                if (window.parent === window && !isPopup) {
-                    if (this._navigateToLoginRequestUrl) {
-                        const loginStartPage = this._cacheStorage.getItem(Constants.loginRequest);
-                        this._cacheStorage.setItem(Constants.urlHash, hash);
-                        if (typeof loginStartPage !== 'undefined' && loginStartPage && loginStartPage.length !== 0) {
-                            // prevent the current location change and redirect the user back to the login start page
-                            this._logger.verbose('Redirecting to start page: ' + loginStartPage);
-                            window.location.href = loginStartPage;
-                        }
-                    } else { // redirect to redirect uri. No page reload here since we are only removing the url after the hash
-                        window.location.hash = '';
-                    }
-                }
-            } else {
-                // state did not match, broadcast an error
-                this.broadcastService.broadcast('msal:stateMismatch', msalError);
+            this.saveTokenFromHash(hash, { ...requestInfo, stateMatch: true });
+            const url = this.getPreviousRoute();
+            if (window.location.href.indexOf('#state=') !== -1) {
+                // navigate to previous url otherwise it gives route not found error.
+                this.router.navigateByUrl(url);
             }
-        } else {
-            const pendingCallback = this._cacheStorage.getItem(Constants.urlHash);
-            if (pendingCallback) {
-                this.processRedirectCallBack(pendingCallback);
+            // give some time to register callback in user's code
+            if (!popup) {
+                setTimeout(() => {
+                    if (msal) {
+                        callback = msal.authResponseCallback;
+                    }
+                    if (callback && typeof callback === 'function') {
+                        const token = requestInfo.access_token || requestInfo.id_token;
+                        const error = requestInfo.error;
+                        const errorDescription = requestInfo.error_description;
+                        callback(errorDescription, token, error, Constants.idToken);
+                    }
+                }, 100);
             }
         }
     }
 
-
-    private processRedirectCallBack(hash: string): void {
-        this._logger.info('Processing the callback from redirect response');
-        const requestInfo = this.getRequestInfo(hash);
-        const token = requestInfo.parameters[Constants.accessToken] || requestInfo.parameters[Constants.idToken];
-        const errorDesc = requestInfo.parameters[Constants.errorDescription];
-        const error = requestInfo.parameters[Constants.error];
-        let tokenType: string;
-        this._cacheStorage.removeItem(Constants.urlHash);
-        const msalError = new MSALError(error, errorDesc);
-        const authenticationResult = new AuthenticationResult(token);
-        if (requestInfo.parameters[Constants.accessToken]) {
-            tokenType = Constants.accessToken;
-            if (token) {
-                authenticationResult.tokenType = tokenType;
-                this.broadcastService.broadcast('msal:acquireTokenSuccess', authenticationResult);
-            } else if (error && errorDesc) {
-                // TODO this should also send back the scopes
-                this.broadcastService.broadcast('msal:acquireTokenFailure', msalError);
-            }
-        } else {
-            tokenType = Constants.idToken;
-            if (token) {
-                authenticationResult.tokenType = tokenType;
-                this.broadcastService.broadcast('msal:loginSuccess', authenticationResult);
-            } else if (error && errorDesc) {
-                this.broadcastService.broadcast('msal:loginFailure', msalError);
-            }
-        }
-    }
-
-
-    private isUnprotectedResource(url: string) {
-        if (this.config && this.config.unprotectedResources) {
-            this.config.unprotectedResources.forEach(unprotectedResource => {
-                if (url.indexOf(unprotectedResource) > -1) {
-                    return true;
-                }
-            });
-        }
-        return false;
-    }
 
     protected clearCache() {
         super.clearCache();
-    }
-
-
-    /*This is a private api and not supposed to be use by customers */
-    getLogger() {
-        return super.getLogger();
-    }
-
-    getCacheStorage(): any {
-        return this._cacheStorage;
-
     }
 
     public isCallback(hash: string): boolean {
         return super.isCallback(hash);
     }
 
-    public loginRedirect(consentScopes?: string[], extraQueryParameters?: string) {
-        if (!consentScopes) {
-            consentScopes = this.config.consentScopes;
+    public loginRedirect(request?: AuthenticationParameters): void {
+        this.storeCurrentRoute();
+        if (!request.extraScopesToConsent) {
+            request.extraScopesToConsent = this.injectedConfig.consentScopes;
         }
-        this._logger.verbose('login redirect flow');
-        super.loginRedirect(consentScopes, extraQueryParameters);
+        if (!request.scopes) {
+            request.scopes = [];
+        }
+        this.getLogger().verbose('login redirect flow');
+        super.loginRedirect(request);
     }
 
-    public loginPopup(consentScopes?: string[], extraQueryParameters?: string): Promise<any> {
-        if (!consentScopes) {
-            consentScopes = this.config.consentScopes;
+    public loginPopup(request?: AuthenticationParameters): Promise<AuthResponse> {
+        this.storeCurrentRoute();
+        if (!request.extraScopesToConsent) {
+            request.extraScopesToConsent = this.injectedConfig.consentScopes;
         }
-        this._logger.verbose('login popup flow');
-        return new Promise((resolve, reject) => {
-            super.loginPopup(consentScopes, extraQueryParameters).then((idToken) => {
-                const authenticationResult = new AuthenticationResult(idToken, 'idToken');
-                this.broadcastService.broadcast('msal:loginSuccess', authenticationResult);
-                resolve(idToken);
-            }, (error: any) => {
-                const errorParts = error.split('|');
-                const msalError = new MSALError(errorParts[0], errorParts[1]);
-                this._logger.error('Error during login:\n' + error);
-                this.broadcastService.broadcast('msal:loginFailure', msalError);
-                reject(error);
-            });
+        return new Promise(resolve => {
+            super.loginPopup(request);
+            const callbackFunction = (e: CustomEvent) => {
+                this.getLogger().verbose('popUpHashChanged');
+                this.processHash(e.detail, true);
+                window.removeEventListener('msal:popUpHashChanged', callbackFunction);
+                resolve();
+            };
+            // callback can come from popupWindow, iframe or mainWindow
+            window.addEventListener('msal:popUpHashChanged', callbackFunction);
         });
     }
 
-    public logout(): void {
-        this.user = null;
-        super.logout();
-    }
-
-    getCachedTokenInternal(scopes: any): CacheResult {
-        return super.getCachedTokenInternal(scopes, this.getUser());
-    }
-
-    public acquireTokenSilent(scopes?: Array<string>, authority?: string, user?: User, extraQueryParameters?: string): Promise<any> {
-        if (!scopes) {
-            scopes = this.config.consentScopes;
+    public acquireTokenSilent(request: AuthenticationParameters): Promise<AuthResponse> {
+        this.storeCurrentRoute();
+        if (!request.scopes) {
+            request.scopes = this.injectedConfig.consentScopes;
         }
+        return super.acquireTokenSilent(request);
+    }
+
+    public acquireTokenPopup(request: AuthenticationParameters): Promise<AuthResponse> {
+        this.storeCurrentRoute();
         return new Promise((resolve, reject) => {
-            super.acquireTokenSilent(scopes, authority, user, extraQueryParameters).then((token: any) => {
+            super.acquireTokenPopup(request).then((token: any) => {
                 this.renewActive = false;
-                const authenticationResult = new AuthenticationResult(token);
-                this.broadcastService.broadcast('msal:acquireTokenSuccess', authenticationResult);
                 resolve(token);
-            }, (error: any) => {
-                const errorParts = error.split('|');
-                const msalError = new MSALError(errorParts[0], errorParts[1]);
+            }, (error: AuthError) => {
                 this.renewActive = false;
-                this.broadcastService.broadcast('msal:acquireTokenFailure', msalError);
-                this._logger.error('Error when acquiring token for scopes: ' + scopes + ' ' + error);
-                reject(error);
-            });
-        });
-
-    }
-
-    public acquireTokenPopup(scopes: Array<string>, authority?: string, user?: User, extraQueryParameters?: string): Promise<any> {
-        return new Promise((resolve, reject) => {
-            super.acquireTokenPopup(scopes, authority, user, extraQueryParameters).then((token: any) => {
-                this.renewActive = false;
-                const authenticationResult = new AuthenticationResult(token);
-                this.broadcastService.broadcast('msal:acquireTokenSuccess', authenticationResult);
-                resolve(token);
-            }, (error: any) => {
-                const errorParts = error.split('|');
-                const msalError = new MSALError(errorParts[0], errorParts[1]);
-                this.renewActive = false;
-                this.broadcastService.broadcast('msal:acquireTokenFailure', msalError);
-                this._logger.error('Error when acquiring token for scopes : ' + scopes + ' ' + error);
+                this.getLogger().error('Error when acquiring token for scopes : ' + request.scopes + ' ' + error);
                 reject(error);
             });
         });
     }
 
-    public acquireTokenRedirect(scopes: Array<string>, authority?: string, user?: User, extraQueryParameters?: string) {
-        const acquireTokenStartPage = this._cacheStorage.getItem(Constants.loginRequest);
-        if (window.location.href !== acquireTokenStartPage) {
-            this._cacheStorage.setItem(Constants.loginRequest, window.location.href);
-        }
-        super.acquireTokenRedirect(scopes, authority, user, extraQueryParameters);
+    public acquireTokenRedirect(request: AuthenticationParameters) {
+        this.storeCurrentRoute();
+        super.acquireTokenRedirect(request);
     }
 
-    public loginInProgress(): boolean {
-        return super.loginInProgress();
+    private storeCurrentRoute() {
+        const url = this.router.url;
+        this.cacheStorage.setItem('login-url', url);
+    }
+    private getPreviousRoute() {
+        const url = this.router.url;
+        return this.cacheStorage.getItem('login-url');
     }
 
-    public getUser(): User {
-        return super.getUser();
-    }
 
     getScopesForEndpoint(endpoint: string) {
         return super.getScopesForEndpoint(endpoint);
+    }
+
+    getCacheStorage() {
+        return this.cacheStorage;
+    }
+
+    getTokenFromCached(scopes: string[]) {
+        return super.getCachedTokenInternal(scopes, this.getAccount(), '');
     }
 
     clearCacheForScope(accessToken: string) {
         super.clearCacheForScope(accessToken);
     }
 
+    getLogger() {
+        return super.getLogger();
+    }
+
     info(message: string) {
-        this._logger.info(message);
+        this.getLogger().info(message);
     }
 
     verbose(message: string) {
-        this._logger.verbose(message);
+        this.getLogger().verbose(message);
     }
 
     removeItem(key: string) {
-        this._cacheStorage.removeItem(key);
+        this.cacheStorage.removeItem(key);
     }
+
 }
 

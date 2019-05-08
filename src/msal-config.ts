@@ -1,12 +1,14 @@
-import { LogLevel } from 'msal';
+import { LogLevel, CacheLocation } from 'msal';
 import { ILoggerCallback } from 'msal/lib-commonjs/Logger';
+import { QPDict } from 'msal/lib-commonjs/AuthenticationParameters';
 
 export class MsalConfig {
     clientID: string;
     authority ?= 'https://login.microsoftonline.com/common';
     tokenReceivedCallback?: boolean;
     validateAuthority ?= true;
-    cacheLocation ?= 'sessionStorage';
+    storeAuthStateInCookie ?= true;
+    cacheLocation: CacheLocation = 'sessionStorage';
     redirectUri?: string;
     postLogoutRedirectUri?: string;
     logger?: ILoggerCallback;
@@ -15,9 +17,9 @@ export class MsalConfig {
     popUp?: boolean;
     consentScopes?: string[];
     isAngular?: true;
-    unprotectedResources?: string[];
-    protectedResourceMap?: [string, string[]][];
-    extraQueryParameters?: string;
+    unprotectedResources?: string[] = [];
+    protectedResourceMap?: [string, string[]][] = [];
+    extraQueryParameters?: QPDict;
     correlationId?: string;
     level?: LogLevel;
     piiLoggingEnabled?: boolean;

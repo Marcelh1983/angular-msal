@@ -3,8 +3,6 @@ import { Injectable, ModuleWithProviders, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MsalService, MSAL_CONFIG } from './msal.service';
 import { MsalGuard } from './msal-guard.service';
-import { BroadcastService } from './broadcast.service';
-
 
 @Injectable()
 export class WindowWrapper extends Window {
@@ -15,7 +13,7 @@ export class WindowWrapper extends Window {
   declarations: [
 
   ],
-  providers: [MsalGuard, BroadcastService],
+  providers: [MsalGuard],
 })
 export class MsalModule {
   static forRoot(config: MsalConfig): ModuleWithProviders {
