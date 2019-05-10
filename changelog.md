@@ -1,3 +1,6 @@
+# 1.0.4 (5/10/2019)
+* fix for <a href="https://github.com/AzureAD/microsoft-authentication-library-for-js/issues/588"> Cannot navigate "Back" in Login Redirect</a>
+
 # 1.0.3 (5/10/2019)
 * redirectUri and postLogoutRedirectUri can be of type function too (useful for aot compiling).
 
