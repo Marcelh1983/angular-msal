@@ -1,5 +1,5 @@
-# 1.0.2 (5/10/2019)
-* redirectUri and postLogoutRedirectUri can be of type function too.
+# 1.0.3 (5/10/2019)
+* redirectUri and postLogoutRedirectUri can be of type function too (useful for aot compiling).
 
 # 1.0.1 (5/8/2019)
 * upgraded msal.js (1.0.0)

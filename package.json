@@ -6,9 +6,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Marcelh1983/msal-angular-clone.git"
+    "url": "https://github.com/Marcelh1983/angular-msal.git"
   },
-  "version": "1.0.2",
+  "version": "1.0.3",
   "keywords": [
     "implicit",
     "angular",
@@ -60,5 +60,5 @@
   "directories": {
     "test": "tests"
   },
-  "description": "@azure/angular-msal clone with support for Angular 6+ and Internet Explorer"
+  "description": "msal with Angular using msal@1.0.0, with support for Angular6+ and es5"
 }
