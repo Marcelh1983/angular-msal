@@ -52,8 +52,8 @@ export class MsalService extends UserAgentApplication {
 
     private processHash(hash: string, popup = false) {
         // assuming that using a popup, this is not needed.
-        let requestInfo = null;
-        let callback = null;
+        let requestInfo: any = null;
+        let callback: any = null;
         let msal: any;
         if (this.isCallback(hash)) {
             // redirect flow
