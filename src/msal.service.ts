@@ -102,6 +102,11 @@ export class MsalService extends UserAgentApplication {
             request.scopes = [];
         }
         this.getLogger().verbose('login redirect flow');
+        // because msal does a window.location.replace which does't give you the
+        // possibilty to navigate back
+
+        // see: https://github.com/AzureAD/microsoft-authentication-library-for-js/issues/588
+        history.pushState(null, null, this.router.url);
         super.loginRedirect(request);
     }
 
