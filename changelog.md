@@ -1,5 +1,5 @@
 # 0.1.5 (5/3/2019)
-# 1.0.0 (5/8/2019)
+# 1.0.1 (5/8/2019)
 * upgraded msal.js (1.0.0)
 * removed all code that I don't understand
 * login redirect and loginPopup works with msal@1.0.0

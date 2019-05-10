@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/Marcelh1983/msal-angular-clone.git"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "keywords": [
     "implicit",
     "angular",
@@ -20,7 +20,8 @@
   "ngPackage": {
     "lib": {
       "entryFile": "src/index.ts"
-    }
+    },
+    "whitelistedNonPeerDependencies": ["."]
   },
   "scripts": {
     "build": "ng-packagr -p package.json",
@@ -29,6 +30,9 @@
   "typings": "./dist/index.d.ts",
   "engines": {
     "node": ">=0.8.0"
+  },
+  "dependencies": {
+    "msal": "~1.0.0"
   },
   "devDependencies": {
     "@angular/common": "^7.0.0",
@@ -41,7 +45,6 @@
     "ng-packagr": "^5.1.0",
     "codelyzer": "~5.0.0",
     "core-js": "^2.4.1",
-    "msal": "^1.0.0",
     "rxjs": "^6.5.0",
     "tslint": "^5.15.0",
     "typescript": "3.1.6",
@@ -52,8 +55,7 @@
     "@angular/common": ">= 6.0.0",
     "@angular/core": ">= 6.0.0",
     "@angular/router": ">= 6.0.0",
-    "rxjs": ">= 6.3.0",
-    "msal": ">= 1.0.0"
+    "rxjs": ">= 6.3.0"
   },
   "directories": {
     "test": "tests"
