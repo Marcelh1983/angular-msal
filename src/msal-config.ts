@@ -9,8 +9,8 @@ export class MsalConfig {
     validateAuthority ?= true;
     storeAuthStateInCookie ?= true;
     cacheLocation: CacheLocation = 'sessionStorage';
-    redirectUri?: string;
-    postLogoutRedirectUri?: string;
+    redirectUri?: string | (() => string);
+    postLogoutRedirectUri?: string | (() => string);
     logger?: ILoggerCallback;
     loadFrameTimeout ?= 6000;
     navigateToLoginRequestUrl ?= true;
