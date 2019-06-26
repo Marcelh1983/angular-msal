@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/Marcelh1983/angular-msal.git"
   },
-  "version": "1.0.4",
+  "version": "1.0.5",
   "keywords": [
     "implicit",
     "angular",
@@ -21,7 +21,9 @@
     "lib": {
       "entryFile": "src/index.ts"
     },
-    "whitelistedNonPeerDependencies": ["."]
+    "whitelistedNonPeerDependencies": [
+      "."
+    ]
   },
   "scripts": {
     "build": "ng-packagr -p package.json",
@@ -32,23 +34,22 @@
     "node": ">=0.8.0"
   },
   "dependencies": {
-    "msal": "~1.0.0"
+    "msal": "~1.0.2"
   },
   "devDependencies": {
-    "@angular/common": "^7.0.0",
-    "@angular/compiler": "^7.0.0",
-    "@angular/compiler-cli": "^7.0.0",
-    "@angular/core": "^7.0.0",
-    "@angular/platform-browser": "^7.0.0",
-    "@angular/platform-browser-dynamic": "^7.0.0",
-    "@angular/router": "^7.0.0",
-    "ng-packagr": "^5.1.0",
-    "codelyzer": "~5.0.0",
-    "core-js": "^2.4.1",
+    "@angular/common": "^8.0.0",
+    "@angular/compiler": "^8.0.0",
+    "@angular/compiler-cli": "^8.0.0",
+    "@angular/core": "^8.0.0",
+    "@angular/platform-browser": "^8.0.0",
+    "@angular/platform-browser-dynamic": "^8.0.0",
+    "@angular/router": "^8.0.0",
+    "ng-packagr": "^5.3.0",
+    "codelyzer": "~5.1.0",
     "rxjs": "^6.5.0",
     "tslint": "^5.15.0",
-    "typescript": "3.1.6",
-    "zone.js": "^0.8.26"
+    "typescript": "3.4.3",
+    "zone.js": "^0.9.1"
   },
   "peerDependencies": {
     "@types/es6-shim": "^0.31.39",

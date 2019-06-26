@@ -7,14 +7,12 @@ import {
 import { AuthenticationParameters } from 'msal/lib-commonjs/AuthenticationParameters';
 import { AuthResponse } from 'msal/lib-commonjs/AuthResponse';
 import { Router } from '@angular/router';
-import { ResolvedStaticSymbol } from '@angular/compiler';
 
 export const MSAL_CONFIG = new InjectionToken<string>('MSAL_CONFIG');
 
 @Injectable()
 export class MsalService extends UserAgentApplication {
     public renewActive: boolean;
-    private loginScopes: string[];
 
     constructor(@Inject(MSAL_CONFIG) private injectedConfig: MsalConfig, private router: Router) {
         super({
@@ -45,7 +43,6 @@ export class MsalService extends UserAgentApplication {
                 unprotectedResources: injectedConfig.unprotectedResources || []
             }
         });
-        this.loginScopes = [this.injectedConfig.clientID];
         const urlHash = window.location.hash;
         this.processHash(urlHash);
     }
