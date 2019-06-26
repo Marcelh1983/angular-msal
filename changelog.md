@@ -1,5 +1,5 @@
-# 1.0.4 (6/26/2019)
-* Updgraded Angular and msal
+# 1.0.5 (6/26/2019)
+* Upgraded Angular and msal
 
 # 1.0.4 (5/10/2019)
 * fix for <a href="https://github.com/AzureAD/microsoft-authentication-library-for-js/issues/588"> Cannot navigate "Back" in Login Redirect</a>
