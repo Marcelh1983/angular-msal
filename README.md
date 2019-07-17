@@ -25,23 +25,19 @@ export function baseUri() {
   return window.location.protocol + '//' + window.location.host + '/';
 }
 
+// AoT requires an exported function for factories
+export function HttpConfigFactory(http: HttpClient) {
+    return new HttpConfigLoader(http);
+}
+
 @NgModule({
   imports: [
-    MsalModule.forRoot({
-      clientID: environment.clientId,
-      authority: environment.authority + environment.userFlowTeacher,
-      validateAuthority: true,
-      cacheLocation: 'localStorage',
-      postLogoutRedirectUri: baseUri,
-      redirectUri: baseUri,
-      navigateToLoginRequestUrl: true,
-      popUp: false,
-      consentScopes: environment.scopes,
-      logger: loggerCallback,
-      correlationId: 'correlationId1234',
-      level: LogLevel.Info,
-      piiLoggingEnabled: true
-    }),
+    MsalModule.forRoot( 
+        loader: {
+                provide: TranslateLoader,
+                useFactory: HttpLoaderFactory,
+                deps: [HttpClient]
+            }),
   ],
 ```    
 

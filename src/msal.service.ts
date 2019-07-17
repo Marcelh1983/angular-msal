@@ -7,44 +7,53 @@ import {
 import { AuthenticationParameters } from 'msal/lib-commonjs/AuthenticationParameters';
 import { AuthResponse } from 'msal/lib-commonjs/AuthResponse';
 import { Router } from '@angular/router';
+import { ConfigLoader } from 'config-loader';
+import { tap, map } from 'rxjs/operators';
 
 export const MSAL_CONFIG = new InjectionToken<string>('MSAL_CONFIG');
 
 @Injectable()
-export class MsalService extends UserAgentApplication {
+export class MsalService {
     public renewActive: boolean;
+    private userAgentApplication: UserAgentApplication;
+    constructor(configLoader: ConfigLoader, private router: Router) {
 
-    constructor(@Inject(MSAL_CONFIG) private injectedConfig: MsalConfig, private router: Router) {
-        super({
-            auth: {
-                authority: injectedConfig.authority,
-                validateAuthority: injectedConfig.validateAuthority,
-                navigateToLoginRequestUrl: injectedConfig.navigateToLoginRequestUrl,
-                postLogoutRedirectUri: injectedConfig.postLogoutRedirectUri,
-                clientId: injectedConfig.clientID,
-                redirectUri: injectedConfig.redirectUri,
-            },
-            cache: {
-                cacheLocation: injectedConfig.cacheLocation,
-                storeAuthStateInCookie: injectedConfig.storeAuthStateInCookie
-            },
-            system: {
-                loadFrameTimeout: injectedConfig.loadFrameTimeout,
-                logger: new Logger(injectedConfig.logger,
-                    {
-                        correlationId: injectedConfig.correlationId,
-                        level: injectedConfig.level,
-                        piiLoggingEnabled: injectedConfig.piiLoggingEnabled
-                    })
-            },
-            framework: {
-                isAngular: true,
-                protectedResourceMap: new Map(injectedConfig.protectedResourceMap),
-                unprotectedResources: injectedConfig.unprotectedResources || []
+        configLoader.getConfig().pipe(tap(config => {
+            {
+                this.userAgentApplication = new UserAgentApplication({
+                    auth: {
+                        authority: config.authority,
+                        validateAuthority: config.validateAuthority,
+                        navigateToLoginRequestUrl: config.navigateToLoginRequestUrl,
+                        postLogoutRedirectUri: config.postLogoutRedirectUri,
+                        clientId: config.clientID,
+                        redirectUri: config.redirectUri,
+                    },
+                    cache: {
+                        cacheLocation: config.cacheLocation,
+                        storeAuthStateInCookie: config.storeAuthStateInCookie
+                    },
+                    system: {
+                        loadFrameTimeout: config.loadFrameTimeout,
+                        logger: new Logger(config.logger,
+                            {
+                                correlationId: config.correlationId,
+                                level: config.level,
+                                piiLoggingEnabled: config.piiLoggingEnabled
+                            })
+                    },
+                    framework: {
+                        isAngular: true,
+                        protectedResourceMap: new Map(config.protectedResourceMap),
+                        unprotectedResources: config.unprotectedResources || []
+                    }
+                });
+
+
             }
-        });
-        const urlHash = window.location.hash;
-        this.processHash(urlHash);
+            const urlHash = window.location.hash;
+            this.processHash(urlHash);
+        }));
     }
 
     private processHash(hash: string, popup = false) {
@@ -83,7 +92,7 @@ export class MsalService extends UserAgentApplication {
 
 
     protected clearCache() {
-        super.clearCache();
+        this.userAgentApplication.clearCache();
     }
 
     public isCallback(hash: string): boolean {
