@@ -1,5 +1,4 @@
-import { Inject, Injectable, InjectionToken } from '@angular/core';
-import { MsalConfig } from './msal-config';
+import { Injectable, InjectionToken } from '@angular/core';
 import {
     UserAgentApplication,
     Constants, Logger, AuthError
@@ -8,10 +7,7 @@ import { AuthenticationParameters } from 'msal/lib-commonjs/AuthenticationParame
 import { AuthResponse } from 'msal/lib-commonjs/AuthResponse';
 import { Router } from '@angular/router';
 import { ConfigLoader } from 'config-loader';
-import { tap, map } from 'rxjs/operators';
-
-export const MSAL_CONFIG = new InjectionToken<string>('MSAL_CONFIG');
-
+import { tap } from 'rxjs/operators';
 @Injectable()
 export class MsalService {
     public renewActive: boolean;
@@ -67,7 +63,8 @@ export class MsalService {
                 msal = window.parent.msal;
                 requestInfo = msal.deserializeHash(hash);
             }
-            this.saveTokenFromHash(hash, { ...requestInfo, stateMatch: true });
+            // tslint:disable-next-line:no-string-literal
+            this.userAgentApplication['saveTokenFromHash'](hash, { ...requestInfo, stateMatch: true });
             const url = this.getPreviousRoute();
             if (window.location.href.indexOf('#state=') !== -1) {
                 // navigate to previous url otherwise it gives route not found error.
@@ -90,19 +87,25 @@ export class MsalService {
         }
     }
 
+    public getLoginInProgress() {
+        return this.userAgentApplication.getLoginInProgress();
+    }
+
 
     protected clearCache() {
-        this.userAgentApplication.clearCache();
+        // tslint:disable-next-line:no-string-literal
+        this.userAgentApplication['clearCache']();
     }
 
     public isCallback(hash: string): boolean {
-        return super.isCallback(hash);
+        return this.userAgentApplication.isCallback(hash);
     }
 
     public loginRedirect(request?: AuthenticationParameters): void {
         this.storeCurrentRoute();
         if (!request.extraScopesToConsent) {
-            request.extraScopesToConsent = this.injectedConfig.consentScopes;
+            // tslint:disable-next-line:no-string-literal
+            request.extraScopesToConsent = this.userAgentApplication['config'].consentScopes;
         }
         if (!request.scopes) {
             request.scopes = [];
@@ -113,16 +116,17 @@ export class MsalService {
 
         // see: https://github.com/AzureAD/microsoft-authentication-library-for-js/issues/588
         history.pushState(null, null, this.router.url);
-        super.loginRedirect(request);
+        this.userAgentApplication.loginRedirect(request);
     }
 
     public loginPopup(request?: AuthenticationParameters): Promise<AuthResponse> {
         this.storeCurrentRoute();
         if (!request.extraScopesToConsent) {
-            request.extraScopesToConsent = this.injectedConfig.consentScopes;
+            // tslint:disable-next-line:no-string-literal
+            request.extraScopesToConsent = this.userAgentApplication['config'].consentScopes;
         }
         return new Promise(resolve => {
-            super.loginPopup(request);
+            this.userAgentApplication.loginPopup(request);
             const callbackFunction = (e: CustomEvent) => {
                 this.getLogger().verbose('popUpHashChanged');
                 this.processHash(e.detail, true);
@@ -137,15 +141,16 @@ export class MsalService {
     public acquireTokenSilent(request: AuthenticationParameters): Promise<AuthResponse> {
         this.storeCurrentRoute();
         if (!request.scopes) {
-            request.scopes = this.injectedConfig.consentScopes;
+            // tslint:disable-next-line:no-string-literal
+            request.scopes = this.userAgentApplication['config'].consentScopes;
         }
-        return super.acquireTokenSilent(request);
+        return this.userAgentApplication.acquireTokenSilent(request);
     }
 
     public acquireTokenPopup(request: AuthenticationParameters): Promise<AuthResponse> {
         this.storeCurrentRoute();
         return new Promise((resolve, reject) => {
-            super.acquireTokenPopup(request).then((token: any) => {
+            this.userAgentApplication.acquireTokenPopup(request).then((token: any) => {
                 this.renewActive = false;
                 resolve(token);
             }, (error: AuthError) => {
@@ -158,37 +163,45 @@ export class MsalService {
 
     public acquireTokenRedirect(request: AuthenticationParameters) {
         this.storeCurrentRoute();
-        super.acquireTokenRedirect(request);
+        this.userAgentApplication.acquireTokenRedirect(request);
     }
 
     private storeCurrentRoute() {
         const url = this.router.url;
-        this.cacheStorage.setItem('login-url', url);
+        // tslint:disable-next-line:no-string-literal
+        this.getCacheStorage().setItem('login-url', url);
     }
     private getPreviousRoute() {
         const url = this.router.url;
-        return this.cacheStorage.getItem('login-url');
+        // tslint:disable-next-line:no-string-literal
+        return this.getCacheStorage().getItem('login-url');
     }
 
 
     getScopesForEndpoint(endpoint: string) {
-        return super.getScopesForEndpoint(endpoint);
+        // tslint:disable-next-line:no-string-literal
+        return this.userAgentApplication['getScopesForEndpoint'](endpoint);
     }
 
     getCacheStorage() {
-        return this.cacheStorage;
+        // tslint:disable-next-line:no-string-literal
+        return this.userAgentApplication['cacheStorage'];
     }
 
     getTokenFromCached(scopes: string[]) {
-        return super.getCachedTokenInternal(scopes, this.getAccount(), '');
+        // tslint:disable-next-line:no-string-literal
+        return this.userAgentApplication['getCachedTokenInternal'](scopes,
+            this.userAgentApplication.getAccount(), '');
     }
 
     clearCacheForScope(accessToken: string) {
-        super.clearCacheForScope(accessToken);
+        // tslint:disable-next-line:no-string-literal
+        this.userAgentApplication['clearCacheForScope'](accessToken);
     }
 
     getLogger() {
-        return super.getLogger();
+        // tslint:disable-next-line:no-string-literal
+        return this.userAgentApplication['getLogger']();
     }
 
     info(message: string) {
@@ -200,7 +213,7 @@ export class MsalService {
     }
 
     removeItem(key: string) {
-        this.cacheStorage.removeItem(key);
+        this.getCacheStorage().removeItem(key);
     }
 
 }

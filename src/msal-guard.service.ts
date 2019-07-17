@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, RouterStateSnapshot } from '@angular/router';
-import { MSAL_CONFIG, MsalService } from './msal.service';
+import { MsalService } from './msal.service';
 import { Location } from '@angular/common';
 import { ConfigLoader } from './config-loader';
 import { Constants } from 'msal';

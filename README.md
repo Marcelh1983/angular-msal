@@ -20,6 +20,8 @@ my backend (using the tokens ObjectId which I make sure is equal to my User.Id)
 
 Add the MsalModule and HttpIntercepter in app.module.ts
 
+Config by url
+
 ```js 
 export function baseUri() {
   return window.location.protocol + '//' + window.location.host + '/';
@@ -27,7 +29,7 @@ export function baseUri() {
 
 // AoT requires an exported function for factories
 export function HttpConfigFactory(http: HttpClient) {
-    return new HttpConfigLoader(http);
+    return new HttpConfigLoader(http, './Assets/config.json');
 }
 
 @NgModule({
@@ -40,6 +42,39 @@ export function HttpConfigFactory(http: HttpClient) {
             }),
   ],
 ```    
+
+config by setting directly
+
+```js 
+export function DefaultConfigFactory(http: HttpClient) {
+    return new DefaultConfigLoader({
+      clientID: environment.clientId,
+      authority: environment.authority + environment.userFlowTeacher,
+      validateAuthority: true,
+      cacheLocation: 'localStorage',
+      postLogoutRedirectUri: baseUri,
+      redirectUri: baseUri,
+      navigateToLoginRequestUrl: true,
+      popUp: false,
+      consentScopes: environment.scopes,
+      logger: loggerCallback,
+      correlationId: 'correlationId1234',
+      level: LogLevel.Info,
+      piiLoggingEnabled: true
+    });
+}
+
+@NgModule({
+  imports: [
+    MsalModule.forRoot( 
+        loader: {
+                provide: TranslateLoader,
+                useFactory: DefaultConfigLoader
+            }),
+  ],
+```    
+
+
 
 ```js 
 providers: [UserService,
