@@ -16,7 +16,7 @@ export class WindowWrapper extends Window {
   providers: [MsalGuard],
 })
 export class MsalModule {
-  static forRoot(config: MsalConfig): ModuleWithProviders {
+  static forRoot(config: MsalConfig): ModuleWithProviders<MsalModule> {
     return {
       ngModule: MsalModule,
       providers: [
