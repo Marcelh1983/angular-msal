@@ -19,7 +19,7 @@ export class MsalGuard implements CanActivate {
                 if (!this.authService.renewActive && !this.authService.getLoginInProgress()) {
                     const loginStartPage = this.getBaseUrl() + state.url;
                     if (loginStartPage !== null) {
-                        this.authService.getCacheStorage().setItem(Constants.angularLoginRequest, loginStartPage);
+                        this.authService.getCacheStorage().setItem(Constants.adalIdToken, loginStartPage);
                     }
                     if (this.config.popUp) {
                         return new Promise((resolve, reject) => {

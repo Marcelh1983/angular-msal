@@ -1,25 +1,26 @@
 {
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "moduleResolution": "node",
-    "module": "commonjs",
-    "target": "es5",
-    "lib": [ "es2015", "dom", "es2015.promise" , "es2017"],
-    "outDir": "lib-commonjs",
-    "baseUrl": "src",
-    "paths": {
+    "compileOnSave": false,
+    "compilerOptions": {
+        "baseUrl": "./",
+        "outDir": "./dist",
+        "sourceMap": true,
+        "declaration": false,
+        "downlevelIteration": true,
+        "experimentalDecorators": true,
+        "module": "esnext",
+        "moduleResolution": "node",
+        "importHelpers": true,
+        "target": "es2015",
+        "typeRoots": [
+            "node_modules/@types"
+        ],
+        "lib": [
+            "es2018",
+            "dom"
+        ]
+    },
+    "angularCompilerOptions": {
+        "fullTemplateTypeCheck": true,
+        "strictInjectionParameters": true
     }
-  },
-  "files": [
-    "./src/index.ts"
-  ],
-  "types": [
-    "jasmine",
-    "node",
-    "jasmine-ajax"
-  ],
-   "typeRoots": [
-      "../node_modules/@types"
-    ]
-
 }

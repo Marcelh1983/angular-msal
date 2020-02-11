@@ -1,6 +1,6 @@
 import { LogLevel, CacheLocation } from 'msal';
 import { ILoggerCallback } from 'msal/lib-commonjs/Logger';
-import { QPDict } from 'msal/lib-commonjs/AuthenticationParameters';
+import { StringDict } from 'msal/lib-commonjs/MsalTypes';
 
 export class MsalConfig {
     clientID: string;
@@ -16,10 +16,9 @@ export class MsalConfig {
     navigateToLoginRequestUrl ?= true;
     popUp?: boolean;
     consentScopes?: string[];
-    isAngular?: true;
     unprotectedResources?: string[] = [];
     protectedResourceMap?: [string, string[]][] = [];
-    extraQueryParameters?: QPDict;
+    extraQueryParameters?: StringDict;
     correlationId?: string;
     level?: LogLevel;
     piiLoggingEnabled?: boolean;

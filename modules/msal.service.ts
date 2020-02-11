@@ -43,6 +43,13 @@ export class MsalService extends UserAgentApplication {
                 unprotectedResources: injectedConfig.unprotectedResources || []
             }
         });
+        this.handleRedirectCallback(() => {
+            // if (error) {
+  
+            // } else {
+            //     this.router.navigate(['/my-profile'])
+            // }
+        });
         const urlHash = window.location.hash;
         this.processHash(urlHash);
     }
@@ -52,17 +59,17 @@ export class MsalService extends UserAgentApplication {
         let requestInfo: any = null;
         let callback: any = null;
         let msal: any;
-        if (this.isCallback(hash)) {
+        if (this.urlContainsHash(hash)) {
             // redirect flow
             if (window.parent && window.parent.msal) {
                 msal = window.parent.msal;
                 requestInfo = msal.deserializeHash(hash);
             }
             this.saveTokenFromHash(hash, { ...requestInfo, stateMatch: true });
-            const url = this.getPreviousRoute();
+            // const url = this.getPreviousRoute();
             if (window.location.href.indexOf('#state=') !== -1) {
                 // navigate to previous url otherwise it gives route not found error.
-                this.router.navigateByUrl(url);
+                // this.router.navigateByUrl(url);
             }
             // give some time to register callback in user's code
             if (!popup) {
@@ -74,7 +81,7 @@ export class MsalService extends UserAgentApplication {
                         const token = requestInfo.access_token || requestInfo.id_token;
                         const error = requestInfo.error;
                         const errorDescription = requestInfo.error_description;
-                        callback(errorDescription, token, error, Constants.idToken);
+                        callback(errorDescription, token, error, Constants.adalIdToken);
                     }
                 }, 100);
             }
@@ -86,12 +93,8 @@ export class MsalService extends UserAgentApplication {
         super.clearCache();
     }
 
-    public isCallback(hash: string): boolean {
-        return super.isCallback(hash);
-    }
-
     public loginRedirect(request?: AuthenticationParameters): void {
-        this.storeCurrentRoute();
+        // this.storeCurrentRoute();
         if (!request.extraScopesToConsent) {
             request.extraScopesToConsent = this.injectedConfig.consentScopes;
         }
@@ -99,16 +102,11 @@ export class MsalService extends UserAgentApplication {
             request.scopes = [];
         }
         this.getLogger().verbose('login redirect flow');
-        // because msal does a window.location.replace which does't give you the
-        // possibilty to navigate back
-
-        // see: https://github.com/AzureAD/microsoft-authentication-library-for-js/issues/588
-        history.pushState(null, null, this.router.url);
         super.loginRedirect(request);
     }
 
     public loginPopup(request?: AuthenticationParameters): Promise<AuthResponse> {
-        this.storeCurrentRoute();
+        // this.storeCurrentRoute();
         if (!request.extraScopesToConsent) {
             request.extraScopesToConsent = this.injectedConfig.consentScopes;
         }
@@ -126,7 +124,7 @@ export class MsalService extends UserAgentApplication {
     }
 
     public acquireTokenSilent(request: AuthenticationParameters): Promise<AuthResponse> {
-        this.storeCurrentRoute();
+        // this.storeCurrentRoute();
         if (!request.scopes) {
             request.scopes = this.injectedConfig.consentScopes;
         }
@@ -134,7 +132,7 @@ export class MsalService extends UserAgentApplication {
     }
 
     public acquireTokenPopup(request: AuthenticationParameters): Promise<AuthResponse> {
-        this.storeCurrentRoute();
+        // this.storeCurrentRoute();
         return new Promise((resolve, reject) => {
             super.acquireTokenPopup(request).then((token: any) => {
                 this.renewActive = false;
@@ -148,18 +146,18 @@ export class MsalService extends UserAgentApplication {
     }
 
     public acquireTokenRedirect(request: AuthenticationParameters) {
-        this.storeCurrentRoute();
+        //this.storeCurrentRoute();
         super.acquireTokenRedirect(request);
     }
 
-    private storeCurrentRoute() {
-        const url = this.router.url;
-        this.cacheStorage.setItem('login-url', url);
-    }
-    private getPreviousRoute() {
-        const url = this.router.url;
-        return this.cacheStorage.getItem('login-url');
-    }
+    // private storeCurrentRoute() {
+    //     const url = this.router.url;
+    //     this.cacheStorage.setItem('login-url', url);
+    // }
+    // private getPreviousRoute() {
+    //     const url = this.router.url;
+    //     return this.cacheStorage.getItem('login-url');
+    // }
 
 
     getScopesForEndpoint(endpoint: string) {

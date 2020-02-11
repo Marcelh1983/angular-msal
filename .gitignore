@@ -51,3 +51,4 @@ __build__/**
 .idea/
 *.swp
 dist/
+demo/environments/environment.local.ts

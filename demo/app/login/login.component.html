@@ -1,0 +1,24 @@
+<div class="d-flex flex-column h-100">
+  <div
+    style="height:30vh"
+    class="bg-white position-relative"
+  >
+  </div>
+
+  <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center">
+    <div class="mb-4">Log in with pop-up</div>
+    <button
+      class="btn btn-dark px-5 mb-4"
+      (click)="login(true)"
+    >
+      Login
+    </button>
+    <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center">
+      <div class="mb-4">Log in redirect</div>
+      <button
+        class="btn btn-dark px-5 mb-4"
+        (click)="login()"
+      >
+        Login
+      </button>
+  </div>
