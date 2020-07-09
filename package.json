@@ -65,5 +65,5 @@
   "directories": {
     "test": "tests"
   },
-  "description": "msal with Angular using msal@1.x, with support for Angular6+ and es5"
+  "description": "msal in Angular as simple as possible"
 }
