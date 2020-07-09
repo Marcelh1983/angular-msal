@@ -1,14 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable } from "@angular/core";
 import {
     HttpRequest,
     HttpHandler,
     HttpEvent,
     HttpInterceptor,
     HttpErrorResponse
-} from '@angular/common/http';
-import { MsalService } from './msal.service';
-import { Observable, forkJoin, from } from 'rxjs';
-import { tap, flatMap } from 'rxjs/operators';
+} from "@angular/common/http";
+import { Observable, from } from "rxjs";
+import { mergeMap, tap } from "rxjs/operators";
+import { MsalService } from "./msal.service";
+import { AuthResponse, ServerHashParamKeys } from "msal";
 
 @Injectable()
 export class MsalInterceptor implements HttpInterceptor {
@@ -17,44 +18,38 @@ export class MsalInterceptor implements HttpInterceptor {
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         const scopes = this.auth.getScopesForEndpoint(req.url);
-        this.auth.verbose('Url: ' + req.url + ' maps to scopes: ' + scopes);
-        if (scopes === null) {
+        this.auth.getLogger().verbose("Url: " + req.url + " maps to scopes: " + scopes);
+
+        // If there are no scopes set for this request, do nothing.
+        if (!scopes) {
             return next.handle(req);
         }
-        const tokenStored = this.auth.getTokenFromCached(scopes);
-        if (tokenStored && tokenStored.idToken) {
-            req = req.clone({
-                setHeaders: {
-                    Authorization: `Bearer ${tokenStored.idToken.rawIdToken}`,
-                }
-            });
-            return next.handle(req).pipe(tap(event => { }, err => {
-                if (err instanceof HttpErrorResponse && err.status === 401) {
-                    if (tokenStored && tokenStored.idToken) {
-                        this.auth.clearCacheForScope(tokenStored.idToken.rawIdToken);
-                    }
-                }
-            }));
-        } else {
-            return from(this.auth.acquireTokenSilent({})).pipe(
-                flatMap(token => {
-                    if (token) {
-                        req = req.clone({
-                            setHeaders: {
-                                Authorization: `Bearer ${token.idToken.rawIdToken}`,
-                            }
-                        });
-                    }
-                    return next.handle(req).pipe(tap(event => { }, err => {
-                        if (err instanceof HttpErrorResponse && err.status === 401) {
-                            if (token && token.idToken) {
-                                this.auth.clearCacheForScope(token.idToken.rawIdToken);
-                            }
-                        }
-                    }));
-                })
-            )
-        }
 
+        let token: string;
+
+        // Acquire a token for this request, and attach as proper auth header.
+        return from(
+            this.auth.acquireTokenSilent({ scopes })
+                .then((response: AuthResponse) => {
+                    token = response.tokenType === ServerHashParamKeys.ID_TOKEN ? response.idToken.rawIdToken : response.accessToken;
+                    const authHeader = `Bearer ${token}`;
+                    return req.clone({
+                        setHeaders: {
+                            Authorization: authHeader,
+                        }
+                    });
+                })
+        )
+            .pipe(
+                mergeMap(nextReq => next.handle(nextReq)),
+                tap(
+                    event => { }, // tslint:disable-line
+                    err => {
+                        if (err instanceof HttpErrorResponse && err.status === 401) {
+                            this.auth.clearCacheForScope(token);
+                        }
+                    }
+                )
+            );
     }
 }

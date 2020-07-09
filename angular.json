@@ -7,6 +7,8 @@
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
+          "inlineTemplate": true,
+          "inlineStyle": true,
           "style": "scss",
           "skipTests": true
         },
@@ -52,8 +54,7 @@
             "styles": [
               "demo/styles.scss"
             ],
-            "scripts": [
-            ]
+            "scripts": []
           },
           "configurations": {
             "production": {
@@ -102,23 +103,8 @@
           "options": {
             "browserTarget": "demo:build"
           }
-        },
-        "lint": {
-          "builder": "@angular-devkit/build-angular:tslint",
-          "options": {
-            "tsConfig": [
-              "tsconfig.app.json"
-            ],
-            "exclude": [
-              "**/node_modules/**"
-            ]
-          }
         }
       }
-    }
-  },
-  "defaultProject": "demo",
-  "cli": {
-    "analytics": false
-  }
+    }},
+  "defaultProject": "demo"
 }

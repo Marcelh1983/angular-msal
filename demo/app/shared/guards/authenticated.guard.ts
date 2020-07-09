@@ -19,7 +19,4 @@ export class AuthenticatedGuard extends MsalGuard implements CanActivate {
        }
        return canActivateRoute;
     }
-
-   
-
 }

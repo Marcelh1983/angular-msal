@@ -8,12 +8,12 @@ export class MsalConfig {
     tokenReceivedCallback?: boolean;
     validateAuthority ?= true;
     storeAuthStateInCookie ?= true;
-    cacheLocation: CacheLocation = 'sessionStorage';
+    cacheLocation?: CacheLocation;
     redirectUri?: string | (() => string);
     postLogoutRedirectUri?: string | (() => string);
     logger?: ILoggerCallback;
     loadFrameTimeout ?= 6000;
-    navigateToLoginRequestUrl ?= true;
+    navigateToLoginRequestUrl ?= false;
     popUp?: boolean;
     consentScopes?: string[];
     unprotectedResources?: string[] = [];
@@ -22,7 +22,5 @@ export class MsalConfig {
     correlationId?: string;
     level?: LogLevel;
     piiLoggingEnabled?: boolean;
-
 }
-
 

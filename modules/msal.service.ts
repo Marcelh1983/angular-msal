@@ -1,8 +1,7 @@
 import { Inject, Injectable, InjectionToken } from '@angular/core';
 import { MsalConfig } from './msal-config';
 import {
-    UserAgentApplication,
-    Constants, Logger, AuthError
+    UserAgentApplication, Logger, AuthError
 } from 'msal';
 import { AuthenticationParameters } from 'msal/lib-commonjs/AuthenticationParameters';
 import { AuthResponse } from 'msal/lib-commonjs/AuthResponse';
@@ -18,15 +17,15 @@ export class MsalService extends UserAgentApplication {
         super({
             auth: {
                 authority: injectedConfig.authority,
-                validateAuthority: injectedConfig.validateAuthority,
-                navigateToLoginRequestUrl: injectedConfig.navigateToLoginRequestUrl,
-                postLogoutRedirectUri: injectedConfig.postLogoutRedirectUri,
+                validateAuthority: injectedConfig.validateAuthority || true,
+                navigateToLoginRequestUrl: injectedConfig.navigateToLoginRequestUrl || false,
+                postLogoutRedirectUri: injectedConfig.postLogoutRedirectUri || `${window.location.protocol}//${window.location.host}/`,
                 clientId: injectedConfig.clientID,
-                redirectUri: injectedConfig.redirectUri,
+                redirectUri: injectedConfig.redirectUri || `${window.location.protocol}//${window.location.host}/`,
             },
             cache: {
-                cacheLocation: injectedConfig.cacheLocation,
-                storeAuthStateInCookie: injectedConfig.storeAuthStateInCookie
+                cacheLocation: injectedConfig.cacheLocation || 'sessionStorage',
+                storeAuthStateInCookie: injectedConfig.storeAuthStateInCookie || false
             },
             system: {
                 loadFrameTimeout: injectedConfig.loadFrameTimeout,
@@ -44,87 +43,12 @@ export class MsalService extends UserAgentApplication {
             }
         });
         this.handleRedirectCallback(() => {
-            // if (error) {
-  
-            // } else {
-            //     this.router.navigate(['/my-profile'])
-            // }
-        });
-        const urlHash = window.location.hash;
-        this.processHash(urlHash);
-    }
-
-    private processHash(hash: string, popup = false) {
-        // assuming that using a popup, this is not needed.
-        let requestInfo: any = null;
-        let callback: any = null;
-        let msal: any;
-        if (this.urlContainsHash(hash)) {
-            // redirect flow
-            if (window.parent && window.parent.msal) {
-                msal = window.parent.msal;
-                requestInfo = msal.deserializeHash(hash);
-            }
-            this.saveTokenFromHash(hash, { ...requestInfo, stateMatch: true });
-            // const url = this.getPreviousRoute();
-            if (window.location.href.indexOf('#state=') !== -1) {
-                // navigate to previous url otherwise it gives route not found error.
-                // this.router.navigateByUrl(url);
-            }
-            // give some time to register callback in user's code
-            if (!popup) {
-                setTimeout(() => {
-                    if (msal) {
-                        callback = msal.authResponseCallback;
-                    }
-                    if (callback && typeof callback === 'function') {
-                        const token = requestInfo.access_token || requestInfo.id_token;
-                        const error = requestInfo.error;
-                        const errorDescription = requestInfo.error_description;
-                        callback(errorDescription, token, error, Constants.adalIdToken);
-                    }
-                }, 100);
-            }
-        }
-    }
-
-
-    protected clearCache() {
-        super.clearCache();
-    }
-
-    public loginRedirect(request?: AuthenticationParameters): void {
-        // this.storeCurrentRoute();
-        if (!request.extraScopesToConsent) {
-            request.extraScopesToConsent = this.injectedConfig.consentScopes;
-        }
-        if (!request.scopes) {
-            request.scopes = [];
-        }
-        this.getLogger().verbose('login redirect flow');
-        super.loginRedirect(request);
-    }
-
-    public loginPopup(request?: AuthenticationParameters): Promise<AuthResponse> {
-        // this.storeCurrentRoute();
-        if (!request.extraScopesToConsent) {
-            request.extraScopesToConsent = this.injectedConfig.consentScopes;
-        }
-        return new Promise(resolve => {
-            super.loginPopup(request);
-            const callbackFunction = (e: CustomEvent) => {
-                this.getLogger().verbose('popUpHashChanged');
-                this.processHash(e.detail, true);
-                window.removeEventListener('msal:popUpHashChanged', callbackFunction);
-                resolve();
-            };
-            // callback can come from popupWindow, iframe or mainWindow
-            window.addEventListener('msal:popUpHashChanged', callbackFunction);
         });
     }
+
+    
 
     public acquireTokenSilent(request: AuthenticationParameters): Promise<AuthResponse> {
-        // this.storeCurrentRoute();
         if (!request.scopes) {
             request.scopes = this.injectedConfig.consentScopes;
         }
@@ -146,51 +70,16 @@ export class MsalService extends UserAgentApplication {
     }
 
     public acquireTokenRedirect(request: AuthenticationParameters) {
-        //this.storeCurrentRoute();
         super.acquireTokenRedirect(request);
     }
-
-    // private storeCurrentRoute() {
-    //     const url = this.router.url;
-    //     this.cacheStorage.setItem('login-url', url);
-    // }
-    // private getPreviousRoute() {
-    //     const url = this.router.url;
-    //     return this.cacheStorage.getItem('login-url');
-    // }
-
-
-    getScopesForEndpoint(endpoint: string) {
+    public getScopesForEndpoint(endpoint: string) {
         return super.getScopesForEndpoint(endpoint);
     }
 
-    getCacheStorage() {
-        return this.cacheStorage;
-    }
-
-    getTokenFromCached(scopes: string[]) {
-        return super.getCachedTokenInternal(scopes, this.getAccount(), '');
-    }
-
-    clearCacheForScope(accessToken: string) {
+    public clearCacheForScope(accessToken: string) {
         super.clearCacheForScope(accessToken);
     }
 
-    getLogger() {
-        return super.getLogger();
-    }
-
-    info(message: string) {
-        this.getLogger().info(message);
-    }
-
-    verbose(message: string) {
-        this.getLogger().verbose(message);
-    }
-
-    removeItem(key: string) {
-        this.cacheStorage.removeItem(key);
-    }
-
+    
 }
 

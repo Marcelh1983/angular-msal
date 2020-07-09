@@ -6,14 +6,10 @@ import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { MyProfileComponent } from './my-profile/my-profile.component';
 import { environment } from '../environments/environment';
-import { MsalModule, MsalInterceptor, MsalGuard } from 'modules';
+import { MsalModule, MsalInterceptor } from 'modules';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { LogLevel } from 'msal';
 import { UserService } from './shared/services/user.service';
-
-export function baseUri() {
-   return window.location.protocol + '//' + window.location.host + '/';
-}
 
 export function loggerCallback(level, message) {
    console.log('client logging' + message);
@@ -30,16 +26,10 @@ export function loggerCallback(level, message) {
       MsalModule.forRoot({
          clientID: environment.clientId,
          authority: environment.authority + environment.userflow,
-         validateAuthority: true,
-         cacheLocation: 'localStorage',
-         postLogoutRedirectUri: baseUri,
-         redirectUri: baseUri,
-         navigateToLoginRequestUrl: true,
-         popUp: false,
          consentScopes: environment.scopes,
          logger: loggerCallback,
          correlationId: 'correlationId1234',
-         level: LogLevel.Info,
+         level: environment.production ? LogLevel.Error : LogLevel.Info,
          piiLoggingEnabled: true
       }),
       BrowserModule,

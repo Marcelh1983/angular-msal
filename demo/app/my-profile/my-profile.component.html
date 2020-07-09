@@ -1,7 +1,11 @@
-<p>
-  Hi!
-
-  Here your profile info
-
-  {{ userService.userState$ | async | json }}
-</p>
+<div class="container">
+  <button class="btn btn-primary" [routerLink]="['/login']">Log out</button>
+  <p>
+    Hi!
+  
+    Here your profile info
+  
+    {{ userService.userState$ | async | json }}
+  </p>
+  
+</div>

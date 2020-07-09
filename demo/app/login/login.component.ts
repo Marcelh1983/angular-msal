@@ -13,28 +13,27 @@ export class LoginComponent {
 
 
   constructor(private msalService: MsalService, public userService: UserService, private router: Router) { }
-  
-  public login(popup = false) {
-      this.msalService.authority = environment.authority + environment.userflow;
-      const key = 'mkt';
-      const qp: StringDict = {};
-      qp[key] = 'en-US';
-      if (popup) {
-        this.msalService.loginRedirect({
-          authority: environment.authority + environment.userflow,
-          extraQueryParameters: qp
-        });
-      } else {
-        this.msalService.loginPopup({
-          authority: environment.authority + environment.userflow,
-          extraQueryParameters: qp
-        }).then(response => {
-          if (response.idToken) {
-            this.router.navigate(['/my-profile']);
-          }
-        });
-      }
 
+  public async login(popup = false) {
+    this.msalService.authority = environment.authority + environment.userflow;
+    const key = 'mkt';
+    const qp: StringDict = {};
+    qp[key] = 'en-US';
+    if (!popup) {
+      this.msalService.loginRedirect({
+        authority: environment.authority + environment.userflow,
+        extraQueryParameters: qp
+      });
+    } else {
+      const response = await this.msalService.loginPopup({
+        authority: environment.authority + environment.userflow,
+        extraQueryParameters: qp
+      });
+      if (response.idToken) {
+        this.router.navigate(['/my-profile']);
+      }
+    };
   }
 
 }
+
