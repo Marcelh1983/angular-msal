@@ -1,3 +1,9 @@
+# 2.0.0 (7/9/2020)
+* Upgraded all packages
+* Copied and modified the guard and interceptor from @azure/msal
+* removed most of the msal.service code
+* updated demo project
+
 # 1.0.5 (6/26/2019)
 * Upgraded Angular and msal
 
