@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { filter, take, map } from 'rxjs/operators';
 import { MsalService } from '../../../../modules';
-import { Router, NavigationStart } from '@angular/router';
 import { Account } from 'msal';
 @Injectable({
     providedIn: 'root'

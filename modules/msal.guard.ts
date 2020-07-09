@@ -4,7 +4,7 @@ import {
 } from "@angular/router";
 import { MsalService } from "./msal.service";
 import { Location } from "@angular/common";
-import {  AuthError, InteractionRequiredAuthError, UrlUtils, WindowUtils } from "msal";
+import { AuthError, InteractionRequiredAuthError, UrlUtils, WindowUtils } from "msal";
 import { MsalConfig } from './msal-config';
 
 export const MSAL_CONFIG = new InjectionToken<string>('MSAL_CONFIG');
@@ -15,7 +15,7 @@ export class MsalGuard implements CanActivate {
         @Inject(MSAL_CONFIG) private msalConfig: MsalConfig,
         private authService: MsalService,
         private location: Location
-    ) {}
+    ) { }
 
     /**
      * Builds the absolute url for the destination page
@@ -45,21 +45,24 @@ export class MsalGuard implements CanActivate {
      * @param url Path of the requested page
      */
     async loginInteractively(url: string) {
+        const qp = {};
+        if (this.msalConfig.lang) {
+            const key = 'mkt';
+            qp[key] = 'en-US';
+        }
         if (this.msalConfig.popUp) {
             return this.authService.loginPopup({
                 scopes: this.msalConfig.consentScopes,
-                extraQueryParameters: this.msalConfig.extraQueryParameters
+                extraQueryParameters: qp
             })
                 .then(() => true)
                 .catch(() => false);
         }
-
         const redirectStartPage = this.getDestinationUrl(url);
-
         this.authService.loginRedirect({
             redirectStartPage,
             scopes: this.msalConfig.consentScopes,
-            extraQueryParameters: this.msalConfig.extraQueryParameters
+            extraQueryParameters: qp
         });
     }
 
@@ -72,23 +75,23 @@ export class MsalGuard implements CanActivate {
             return false;
         }
 
-        if (!this.authService.getAccount()) {
+        if (!this.authService.getAccount() && this.msalConfig.userinteractionInGuard) {
             return this.loginInteractively(state.url);
         }
 
         return this.authService.acquireTokenSilent({
-            scopes: [this.msalConfig.clientID]
+            scopes: [this.msalConfig.clientId]
         })
             .then(() => true)
             .catch((error: AuthError) => {
-                if (InteractionRequiredAuthError.isInteractionRequiredError(error.errorCode)) {
+                if (InteractionRequiredAuthError.isInteractionRequiredError(error.errorCode)
+                    && this.msalConfig.userinteractionInGuard) {
                     this.authService.getLogger().info(`Interaction required error in MSAL Guard, prompting for interaction.`);
                     return this.loginInteractively(state.url);
+                } else {
+                    this.authService.getLogger().error(`Non-interaction error in MSAL Guard: ${error.errorMessage}`);
+                    return Promise.resolve(false);
                 }
-
-                this.authService.getLogger().error(`Non-interaction error in MSAL Guard: ${error.errorMessage}`);
-                throw error;
             });
     }
-
 }

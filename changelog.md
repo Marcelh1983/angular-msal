@@ -1,3 +1,9 @@
+# 2.0.1 (7/9/2020)
+* default, no user interaction from guard. If the user is not authenicated, it should be handled in your own application. Set userinteractionInGuard to true to enable the user interaction login screen from the guard.
+* added language option, which is passed to the login screen if extraParameters aren't provided by the user.
+* don't logout and redirect to the base page if tokenId is empty (to prevent redirect loop).
+
+
 # 2.0.0 (7/9/2020)
 * Upgraded all packages
 * Copied and modified the guard and interceptor from @azure/msal

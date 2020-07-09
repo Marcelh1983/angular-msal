@@ -24,13 +24,11 @@ export function loggerCallback(level, message) {
    ],
    imports: [
       MsalModule.forRoot({
-         clientID: environment.clientId,
+         clientId: environment.clientId,
          authority: environment.authority + environment.userflow,
          consentScopes: environment.scopes,
-         logger: loggerCallback,
-         correlationId: 'correlationId1234',
+         lang: 'en-US',
          level: environment.production ? LogLevel.Error : LogLevel.Info,
-         piiLoggingEnabled: true
       }),
       BrowserModule,
       AppRoutingModule

@@ -1,11 +1,8 @@
 import { Inject, Injectable, InjectionToken } from '@angular/core';
 import { MsalConfig } from './msal-config';
 import {
-    UserAgentApplication, Logger, AuthError
+    UserAgentApplication, AuthError, AuthResponse, AuthenticationParameters
 } from 'msal';
-import { AuthenticationParameters } from 'msal/lib-commonjs/AuthenticationParameters';
-import { AuthResponse } from 'msal/lib-commonjs/AuthResponse';
-import { Router } from '@angular/router';
 
 export const MSAL_CONFIG = new InjectionToken<string>('MSAL_CONFIG');
 
@@ -13,14 +10,14 @@ export const MSAL_CONFIG = new InjectionToken<string>('MSAL_CONFIG');
 export class MsalService extends UserAgentApplication {
     public renewActive: boolean;
 
-    constructor(@Inject(MSAL_CONFIG) private injectedConfig: MsalConfig, private router: Router) {
+    constructor(@Inject(MSAL_CONFIG) private injectedConfig: MsalConfig) {
         super({
             auth: {
-                authority: injectedConfig.authority,
+                authority: injectedConfig.authority || 'https://login.microsoftonline.com/common',
                 validateAuthority: injectedConfig.validateAuthority || true,
                 navigateToLoginRequestUrl: injectedConfig.navigateToLoginRequestUrl || false,
                 postLogoutRedirectUri: injectedConfig.postLogoutRedirectUri || `${window.location.protocol}//${window.location.host}/`,
-                clientId: injectedConfig.clientID,
+                clientId: injectedConfig.clientId,
                 redirectUri: injectedConfig.redirectUri || `${window.location.protocol}//${window.location.host}/`,
             },
             cache: {
@@ -28,13 +25,7 @@ export class MsalService extends UserAgentApplication {
                 storeAuthStateInCookie: injectedConfig.storeAuthStateInCookie || false
             },
             system: {
-                loadFrameTimeout: injectedConfig.loadFrameTimeout,
-                logger: new Logger(injectedConfig.logger,
-                    {
-                        correlationId: injectedConfig.correlationId,
-                        level: injectedConfig.level,
-                        piiLoggingEnabled: injectedConfig.piiLoggingEnabled
-                    })
+                loadFrameTimeout: injectedConfig.loadFrameTimeout
             },
             framework: {
                 isAngular: true,
@@ -42,11 +33,29 @@ export class MsalService extends UserAgentApplication {
                 unprotectedResources: injectedConfig.unprotectedResources || []
             }
         });
-        this.handleRedirectCallback(() => {
-        });
+        this.handleRedirectCallback(() => { });
     }
 
-    
+    public loginPopup(userRequest?: AuthenticationParameters): Promise<AuthResponse> {
+        debugger;
+        const languageKey = 'mkt';
+        if (this.injectedConfig.lang && (!userRequest || !userRequest.extraQueryParameters || !userRequest.extraQueryParameters[languageKey])) {
+            userRequest = userRequest || {} as AuthenticationParameters;
+            userRequest.extraQueryParameters = userRequest.extraQueryParameters || {};
+            userRequest.extraQueryParameters[languageKey] = this.injectedConfig.lang;
+        }
+        return super.loginPopup(userRequest);
+    }
+
+    public loginRedirect(userRequest?: AuthenticationParameters) {
+        const languageKey = 'mkt';
+        if (this.injectedConfig.lang && (!userRequest || !userRequest.extraQueryParameters || !userRequest.extraQueryParameters[languageKey])) {
+            userRequest = userRequest || {} as AuthenticationParameters;
+            userRequest.extraQueryParameters = userRequest.extraQueryParameters || {};
+            userRequest.extraQueryParameters[languageKey] = this.injectedConfig.lang;
+        }
+        return super.loginRedirect(userRequest);
+    }
 
     public acquireTokenSilent(request: AuthenticationParameters): Promise<AuthResponse> {
         if (!request.scopes) {
@@ -72,6 +81,7 @@ export class MsalService extends UserAgentApplication {
     public acquireTokenRedirect(request: AuthenticationParameters) {
         super.acquireTokenRedirect(request);
     }
+
     public getScopesForEndpoint(endpoint: string) {
         return super.getScopesForEndpoint(endpoint);
     }
@@ -80,6 +90,11 @@ export class MsalService extends UserAgentApplication {
         super.clearCacheForScope(accessToken);
     }
 
-    
+    public logout(correlationId?: string) {
+        super.acquireTokenSilent({}).then(r => {
+            if (r.idToken) {
+                super.logout(correlationId);
+            }
+        });
+    };
 }
-
