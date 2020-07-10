@@ -91,7 +91,7 @@ export class MsalService extends UserAgentApplication {
     }
 
     public logout(correlationId?: string) {
-        super.acquireTokenSilent({}).then(r => {
+        this.acquireTokenSilent({}).then(r => {
             if (r.idToken) {
                 super.logout(correlationId);
             }
