@@ -1,3 +1,6 @@
+# 2.0.2 (8/9/2020)
+* fixed: Scopes are required to obtain an access token while logging out.
+
 # 2.0.1 (7/9/2020)
 * default, no user interaction from guard. If the user is not authenicated, it should be handled in your own application. Set userinteractionInGuard to true to enable the user interaction login screen from the guard.
 * added language option, which is passed to the login screen if extraParameters aren't provided by the user.
