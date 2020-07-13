@@ -16,11 +16,11 @@ export class AuthenticatedGuard extends MsalGuard implements CanActivate {
         try {
             const canActivateRoute = super.canActivate(route, state);
             if (canActivateRoute['then']) {
-                (canActivateRoute as Promise<boolean>).then(canActivate => {
-                    return this.handleCanActivate(canActivate);
+                return new Promise(resolve => (canActivateRoute as Promise<boolean>).then(canActivate => {
+                    resolve(this.handleCanActivate(canActivate));
                 }).catch(e => {
-                    return this.handleCanActivate(false);
-                });
+                    resolve(this.handleCanActivate(false));
+                }));
             } else {
                 return this.handleCanActivate(canActivateRoute as boolean);
             }
