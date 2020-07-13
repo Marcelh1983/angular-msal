@@ -90,11 +90,7 @@ export class MsalService extends UserAgentApplication {
     }
 
     public logout(correlationId?: string) {
-        this.acquireTokenSilent({}).then(r => {
-            if (r.idToken) {
-                super.logout(correlationId);
-            }
-        });
+        super.logout(correlationId);
     };
 
     public getScopesForEndpoint(endpoint: string): Array<string> {
