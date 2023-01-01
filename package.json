@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@types/es6-shim": "^0.31.40",
-    "@angular-devkit/build-angular": "~0.1000.1",
+    "@angular-devkit/build-angular": "~15.0.4",
     "@angular/cli": "~10.0.1",
     "@angular/common": "^10.0.3",
     "@angular/compiler": "^10.0.3",
